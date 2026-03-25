@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bid Finder - New Business Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-search-heart"></i> Bid Finder
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="nav nav-pills" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="finder-tab" data-bs-toggle="pill" data-bs-target="#finder" type="button" role="tab">
+                            <i class="bi bi-binoculars"></i> Wyszukiwarka przetargow
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="research-tab" data-bs-toggle="pill" data-bs-target="#research" type="button" role="tab">
+                            <i class="bi bi-person-badge"></i> Research klienta
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="crm-tab" data-bs-toggle="pill" data-bs-target="#crm" type="button" role="tab">
+                            <i class="bi bi-kanban"></i> CRM Przetargow
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="tab-content" id="mainTabContent">
+
+            <!-- ==================== TAB 1: BID FINDER ==================== -->
+            <div class="tab-pane fade show active" id="finder" role="tabpanel">
+                <div class="row">
+                    <!-- Left sidebar: Sources & Keywords -->
+                    <div class="col-lg-3">
+                        <!-- Sources -->
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="bi bi-globe"></i> Zrodla</h6>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addSourceModal">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="sourcesList" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="text-center p-3"><div class="spinner-border spinner-border-sm"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keywords -->
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="bi bi-tags"></i> Slowa kluczowe</h6>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addKeywordModal">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="keywordsList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                                    <div class="text-center p-3"><div class="spinner-border spinner-border-sm"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search button -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" id="searchBtn" onclick="runSearch()">
+                                <i class="bi bi-search"></i> Szukaj przetargow
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadSearchHistory()">
+                                <i class="bi bi-clock-history"></i> Historia wyszukiwan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main content: Search bar + Results -->
+                    <div class="col-lg-9">
+                        <!-- Quick search -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="quickSearchInput"
+                                           placeholder="Wpisz fraze np. kampania marketingowa, social media..."
+                                           onkeypress="if(event.key==='Enter') runQuickSearch()">
+                                    <button class="btn btn-primary" onclick="runQuickSearch()">Szukaj</button>
+                                </div>
+                                <small class="text-muted mt-1 d-block">Oddziel frazy przecinkami aby szukac wielu naraz</small>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="searchStatus" class="d-none">
+                            <div class="alert alert-info">
+                                <div class="spinner-border spinner-border-sm me-2"></div>
+                                <span id="searchStatusText">Przeszukuje zrodla...</span>
+                            </div>
+                        </div>
+
+                        <div id="searchResults">
+                            <div class="card">
+                                <div class="card-body text-center text-muted py-5">
+                                    <i class="bi bi-binoculars" style="font-size: 3rem;"></i>
+                                    <p class="mt-3">Kliknij "Szukaj przetargow" lub wpisz fraze w wyszukiwarke</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 2: CLIENT RESEARCH ==================== -->
+            <div class="tab-pane fade" id="research" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-person-badge"></i> Dane klienta</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Nazwa firmy *</label>
+                                    <input type="text" class="form-control" id="researchCompany" placeholder="np. Grupa Allegro">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email kontaktowy</label>
+                                    <input type="email" class="form-control" id="researchEmail" placeholder="np. jan@allegro.pl">
+                                </div>
+                                <button class="btn btn-primary w-100" id="researchBtn" onclick="runResearch()">
+                                    <i class="bi bi-search"></i> Przygotuj material
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Research history -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-clock-history"></i> Ostatnie wyszukiwania</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="researchHistory" class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div id="researchStatus" class="d-none">
+                            <div class="alert alert-info">
+                                <div class="spinner-border spinner-border-sm me-2"></div>
+                                Przygotowuje material...
+                            </div>
+                        </div>
+                        <div id="researchResults">
+                            <div class="card">
+                                <div class="card-body text-center text-muted py-5">
+                                    <i class="bi bi-person-badge" style="font-size: 3rem;"></i>
+                                    <p class="mt-3">Wpisz dane klienta i kliknij "Przygotuj material"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 3: CRM ==================== -->
+            <div class="tab-pane fade" id="crm" role="tabpanel">
+                <div class="row mb-3">
+                    <!-- Stats -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row text-center" id="crmStats">
+                                    <div class="col"><div class="stat-box"><span class="stat-num" id="stat-total">0</span><br><small>Wszystkie</small></div></div>
+                                    <div class="col"><div class="stat-box bg-info-subtle"><span class="stat-num" id="stat-nowy">0</span><br><small>Nowe</small></div></div>
+                                    <div class="col"><div class="stat-box bg-warning-subtle"><span class="stat-num" id="stat-w_analizie">0</span><br><small>W analizie</small></div></div>
+                                    <div class="col"><div class="stat-box bg-primary-subtle"><span class="stat-num" id="stat-oferta_wyslana">0</span><br><small>Oferta wyslana</small></div></div>
+                                    <div class="col"><div class="stat-box bg-success-subtle"><span class="stat-num" id="stat-wygrana">0</span><br><small>Wygrane</small></div></div>
+                                    <div class="col"><div class="stat-box bg-danger-subtle"><span class="stat-num" id="stat-przegrana">0</span><br><small>Przegrane</small></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-auto">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTenderModal">
+                            <i class="bi bi-plus-lg"></i> Dodaj przetarg
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select" id="crmStatusFilter" onchange="loadCRM()">
+                            <option value="">Wszystkie statusy</option>
+                            <option value="nowy">Nowy</option>
+                            <option value="w_analizie">W analizie</option>
+                            <option value="oferta_wyslana">Oferta wyslana</option>
+                            <option value="wygrana">Wygrana</option>
+                            <option value="przegrana">Przegrana</option>
+                            <option value="anulowany">Anulowany</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="crmList">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-kanban" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Ladowanie...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Add Source Modal -->
+    <div class="modal fade" id="addSourceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj zrodlo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nazwa</label>
+                        <input type="text" class="form-control" id="newSourceName" placeholder="np. Nowy portal">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL</label>
+                        <input type="url" class="form-control" id="newSourceUrl" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="addSource()">Dodaj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Keyword Modal -->
+    <div class="modal fade" id="addKeywordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj slowo kluczowe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Slowo kluczowe</label>
+                        <input type="text" class="form-control" id="newKeyword" placeholder="np. kampania reklamowa">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="addKeyword()">Dodaj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tender Modal -->
+    <div class="modal fade" id="addTenderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj przetarg do CRM</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tytul *</label>
+                        <input type="text" class="form-control" id="tenderTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL</label>
+                        <input type="url" class="form-control" id="tenderUrl">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Zrodlo</label>
+                        <input type="text" class="form-control" id="tenderSource">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Klient</label>
+                        <input type="text" class="form-control" id="tenderClient">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Termin skladania</label>
+                            <input type="date" class="form-control" id="tenderDeadline">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Wartosc</label>
+                            <input type="text" class="form-control" id="tenderValue" placeholder="np. 50 000 PLN">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="tenderStatus">
+                                <option value="nowy">Nowy</option>
+                                <option value="w_analizie">W analizie</option>
+                                <option value="oferta_wyslana">Oferta wyslana</option>
+                                <option value="wygrana">Wygrana</option>
+                                <option value="przegrana">Przegrana</option>
+                                <option value="anulowany">Anulowany</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Priorytet</label>
+                            <select class="form-select" id="tenderPriority">
+                                <option value="niski">Niski</option>
+                                <option value="normalny" selected>Normalny</option>
+                                <option value="wysoki">Wysoki</option>
+                                <option value="pilny">Pilny</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notatki</label>
+                        <textarea class="form-control" id="tenderNotes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="addTender()">Dodaj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Tender Modal -->
+    <div class="modal fade" id="editTenderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edytuj przetarg</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editTenderId">
+                    <div class="mb-3">
+                        <label class="form-label">Tytul *</label>
+                        <input type="text" class="form-control" id="editTenderTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL</label>
+                        <input type="url" class="form-control" id="editTenderUrl">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Zrodlo</label>
+                        <input type="text" class="form-control" id="editTenderSource">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Klient</label>
+                        <input type="text" class="form-control" id="editTenderClient">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Termin skladania</label>
+                            <input type="date" class="form-control" id="editTenderDeadline">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Wartosc</label>
+                            <input type="text" class="form-control" id="editTenderValue">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editTenderStatus">
+                                <option value="nowy">Nowy</option>
+                                <option value="w_analizie">W analizie</option>
+                                <option value="oferta_wyslana">Oferta wyslana</option>
+                                <option value="wygrana">Wygrana</option>
+                                <option value="przegrana">Przegrana</option>
+                                <option value="anulowany">Anulowany</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Priorytet</label>
+                            <select class="form-select" id="editTenderPriority">
+                                <option value="niski">Niski</option>
+                                <option value="normalny">Normalny</option>
+                                <option value="wysoki">Wysoki</option>
+                                <option value="pilny">Pilny</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notatki</label>
+                        <textarea class="form-control" id="editTenderNotes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger me-auto" onclick="deleteTender()">
+                        <i class="bi bi-trash"></i> Usun
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="updateTender()">Zapisz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
