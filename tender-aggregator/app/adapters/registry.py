@@ -18,8 +18,12 @@ from app.adapters.ezamowienia import EzamowieniaAdapter
 from app.adapters.grupa_azoty import GrupaAzotyAdapter
 from app.adapters.logintrade import LogintradeAdapter
 from app.adapters.marketplanet import MarketplanetAdapter
+from app.adapters.pgnig import PgnigAdapter
 from app.adapters.platformazakupowa import PlatformaZakupowaAdapter
+from app.adapters.pzu import PzuAdapter
+from app.adapters.tauron_swoz import TauronSwozAdapter
 from app.adapters.ted import TedAdapter
+from app.adapters.veolia import VeoliaAdapter
 
 
 ADAPTERS: List[BaseAdapter] = [
@@ -61,6 +65,12 @@ ADAPTERS: List[BaseAdapter] = [
         source_slug="platforma",
         display_name="Grupa Azoty — Platforma Zakupowa",
     ),
+
+    # Custom per-company procurement portals.
+    TauronSwozAdapter(),
+    PgnigAdapter(),
+    VeoliaAdapter(),
+    PzuAdapter(),
 ]
 
 
