@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from app.adapters.base import BaseAdapter
+from app.adapters.baltona import BaltonaAdapter
 from app.adapters.baza_konkurencyjnosci import BazaKonkurencyjnosciAdapter
 from app.adapters.bip_ulc import BipUlcAdapter
 from app.adapters.eb2b import Eb2bAdapter
@@ -19,11 +20,13 @@ from app.adapters.ezamowienia import EzamowieniaAdapter
 from app.adapters.grupa_azoty import GrupaAzotyAdapter
 from app.adapters.logintrade import LogintradeAdapter
 from app.adapters.marketplanet import MarketplanetAdapter
+from app.adapters.mmp_online import MmpOnlineAdapter
 from app.adapters.pck import PckAdapter
 from app.adapters.pgnig import PgnigAdapter
 from app.adapters.platformazakupowa import PlatformaZakupowaAdapter
 from app.adapters.polpharma import PolpharmaAdapter
 from app.adapters.pzu import PzuAdapter
+from app.adapters.save_the_children import SaveTheChildrenAdapter
 from app.adapters.synthos import SynthosAdapter
 from app.adapters.tauron_swoz import TauronSwozAdapter
 from app.adapters.ted import TedAdapter
@@ -81,6 +84,9 @@ ADAPTERS: List[BaseAdapter] = [
     SynthosAdapter(),
     BipUlcAdapter(),
     PolpharmaAdapter(),
+    BaltonaAdapter(),
+    MmpOnlineAdapter(),
+    SaveTheChildrenAdapter(),
 ]
 
 
