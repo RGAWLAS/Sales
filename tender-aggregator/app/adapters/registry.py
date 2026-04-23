@@ -15,17 +15,52 @@ from app.adapters.base import BaseAdapter
 from app.adapters.baza_konkurencyjnosci import BazaKonkurencyjnosciAdapter
 from app.adapters.eb2b import Eb2bAdapter
 from app.adapters.ezamowienia import EzamowieniaAdapter
+from app.adapters.grupa_azoty import GrupaAzotyAdapter
+from app.adapters.logintrade import LogintradeAdapter
+from app.adapters.marketplanet import MarketplanetAdapter
 from app.adapters.platformazakupowa import PlatformaZakupowaAdapter
 from app.adapters.ted import TedAdapter
 
 
 ADAPTERS: List[BaseAdapter] = [
+    # API-first, cross-country / cross-tenant sources.
     EzamowieniaAdapter(),
     TedAdapter(),
     BazaKonkurencyjnosciAdapter(),
     PlatformaZakupowaAdapter(),
+
+    # eB2B white-label tenants.
     Eb2bAdapter(subdomain="nask", display_name="eB2B NASK"),
     Eb2bAdapter(subdomain="kowr", display_name="eB2B KOWR"),
+
+    # Logintrade white-label tenants.
+    LogintradeAdapter(subdomain="lpp", display_name="Logintrade LPP"),
+    LogintradeAdapter(subdomain="grupazywiec", display_name="Logintrade Grupa Żywiec"),
+    LogintradeAdapter(subdomain="anwim", display_name="Logintrade Anwim"),
+
+    # Marketplanet / OnePlace buyer portals.
+    MarketplanetAdapter(
+        base_url="oneplace.marketplanet.pl",
+        source_slug="oneplace",
+        display_name="Marketplanet OnePlace",
+    ),
+    MarketplanetAdapter(
+        base_url="zakupy2.mbank.pl",
+        source_slug="mbank",
+        display_name="mBank Zakupy (Marketplanet)",
+    ),
+
+    # Grupa Azoty — two public portals.
+    GrupaAzotyAdapter(
+        base_url="przetargi.grupaazoty.com",
+        source_slug="przetargi",
+        display_name="Grupa Azoty — Przetargi",
+    ),
+    GrupaAzotyAdapter(
+        base_url="platformazakupowa.grupaazoty.com",
+        source_slug="platforma",
+        display_name="Grupa Azoty — Platforma Zakupowa",
+    ),
 ]
 
 
