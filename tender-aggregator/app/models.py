@@ -20,6 +20,17 @@ class TenderStatus(str, enum.Enum):
     WON = "WON"
 
 
+class TenderCategory(str, enum.Enum):
+    """What kind of signal this row represents.
+
+    - TENDER:        a classical tender / RFP with a formal procedure
+    - EARLY_SIGNAL:  weak signal culled from a news feed or editorial page;
+                     useful as a radar blip but not a procurement process
+    """
+    TENDER = "TENDER"
+    EARLY_SIGNAL = "EARLY_SIGNAL"
+
+
 class Tender(Base):
     __tablename__ = "tenders"
 
@@ -40,6 +51,11 @@ class Tender(Base):
         default=TenderStatus.NEW,
         nullable=False,
     )
+    category: Mapped[TenderCategory] = mapped_column(
+        Enum(TenderCategory, native_enum=False, length=20),
+        default=TenderCategory.TENDER,
+        nullable=False,
+    )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
 
@@ -53,6 +69,7 @@ class Tender(Base):
         Index("ix_tenders_status", "status"),
         Index("ix_tenders_scraped_at", "scraped_at"),
         Index("ix_tenders_source", "source"),
+        Index("ix_tenders_category", "category"),
     )
 
 

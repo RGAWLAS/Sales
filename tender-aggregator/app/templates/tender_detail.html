@@ -11,6 +11,10 @@
       <div class="min-w-0">
         <h1 class="text-2xl font-semibold leading-tight">{{ tender.title }}</h1>
         <div class="mt-2 text-sm text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-1">
+          {% if tender.category.value == "EARLY_SIGNAL" %}
+            <span class="inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">Sygnał rynkowy</span>
+            <span class="text-slate-300">&middot;</span>
+          {% endif %}
           {% if tender.organization %}<span>{{ tender.organization }}</span><span class="text-slate-300">&middot;</span>{% endif %}
           <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-mono">{{ tender.source }}</span>
           {% if tender.published_at %}<span class="text-slate-300">&middot;</span><span>Opublikowano: {{ tender.published_at.strftime("%Y-%m-%d") }}</span>{% endif %}

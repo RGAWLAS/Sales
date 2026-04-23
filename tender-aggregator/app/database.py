@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.config import settings
@@ -45,8 +45,35 @@ def get_session() -> Iterator[Session]:
 
 
 def init_db() -> None:
-    """Create tables if they do not yet exist."""
+    """Create tables if they do not yet exist, then apply light migrations."""
     # Import models so metadata is registered.
     from app import models  # noqa: F401
 
     Base.metadata.create_all(engine)
+    _apply_lightweight_migrations()
+
+
+def _apply_lightweight_migrations() -> None:
+    """Idempotent schema fixes for pre-existing SQLite databases.
+
+    We don't use Alembic — SQLite + a small app doesn't justify it — so this
+    covers the one-off column adds we've introduced after the initial ship.
+    """
+    insp = inspect(engine)
+    if "tenders" not in insp.get_table_names():
+        return
+
+    cols = {c["name"] for c in insp.get_columns("tenders")}
+    statements: list[str] = []
+    if "category" not in cols:
+        statements.append(
+            "ALTER TABLE tenders ADD COLUMN category VARCHAR(20) "
+            "NOT NULL DEFAULT 'TENDER'"
+        )
+
+    if not statements:
+        return
+
+    with engine.begin() as conn:
+        for stmt in statements:
+            conn.execute(text(stmt))

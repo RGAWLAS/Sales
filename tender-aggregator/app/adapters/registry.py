@@ -21,6 +21,7 @@ from app.adapters.grupa_azoty import GrupaAzotyAdapter
 from app.adapters.logintrade import LogintradeAdapter
 from app.adapters.marketplanet import MarketplanetAdapter
 from app.adapters.mmp_online import MmpOnlineAdapter
+from app.adapters.news_signal import NewsPageSignalAdapter
 from app.adapters.pck import PckAdapter
 from app.adapters.pgnig import PgnigAdapter
 from app.adapters.platformazakupowa import PlatformaZakupowaAdapter
@@ -31,6 +32,7 @@ from app.adapters.synthos import SynthosAdapter
 from app.adapters.tauron_swoz import TauronSwozAdapter
 from app.adapters.ted import TedAdapter
 from app.adapters.veolia import VeoliaAdapter
+from app.adapters.wirtualne_media import WirtualneMediaAdapter
 
 
 ADAPTERS: List[BaseAdapter] = [
@@ -87,6 +89,59 @@ ADAPTERS: List[BaseAdapter] = [
     BaltonaAdapter(),
     MmpOnlineAdapter(),
     SaveTheChildrenAdapter(),
+
+    # ---- Priority 4: EARLY_SIGNAL sources -------------------------------
+    # Wirtualne Media — dedicated advertising-industry tender column.
+    WirtualneMediaAdapter(),
+
+    # Corporate / bank news feeds: keyword-only filtering, low priority.
+    NewsPageSignalAdapter(
+        base_url="bruk-bet.pl",
+        source_slug="brukbet",
+        display_name="Bruk-Bet — Aktualności",
+        listing_path="/aktualnosci",
+        fallback_paths=("/news", "/informacje"),
+    ),
+    NewsPageSignalAdapter(
+        base_url="baltykgaz.pl",
+        source_slug="baltykgaz",
+        display_name="Bałtykgaz — Aktualności",
+        listing_path="/aktualnosci",
+        fallback_paths=("/news",),
+    ),
+    NewsPageSignalAdapter(
+        base_url="merkurymarket.pl",
+        source_slug="merkurymarket",
+        display_name="Merkury Market — Aktualności",
+        listing_path="/aktualnosci",
+    ),
+    NewsPageSignalAdapter(
+        base_url="ikea.com",
+        source_slug="ikea_newsroom",
+        display_name="IKEA Newsroom",
+        listing_path="/pl/pl/newsroom/",
+        fallback_paths=("/newsroom",),
+    ),
+    NewsPageSignalAdapter(
+        base_url="uniaowocowa.pl",
+        source_slug="unia_owocowa",
+        display_name="Unia Owocowa — Aktualności",
+        listing_path="/aktualnosci",
+    ),
+    NewsPageSignalAdapter(
+        base_url="aliorbank.pl",
+        source_slug="alior",
+        display_name="Alior Bank — Newsroom",
+        listing_path="/o-banku/newsroom",
+        fallback_paths=("/newsroom", "/o-banku/biuro-prasowe"),
+    ),
+    NewsPageSignalAdapter(
+        base_url="pkobp.pl",
+        source_slug="pkobp",
+        display_name="PKO BP — Biuro Prasowe",
+        listing_path="/biuro-prasowe",
+        fallback_paths=("/aktualnosci", "/informacje-prasowe"),
+    ),
 ]
 
 

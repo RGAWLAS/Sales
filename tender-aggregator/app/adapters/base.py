@@ -27,6 +27,10 @@ class RawTender:
     Adapters should populate as many fields as are cheaply available; the
     filtering / persistence layer does not require any field beyond the
     identifiers and title.
+
+    ``category`` defaults to "TENDER". Adapters scraping editorial /
+    news sources should set it to "EARLY_SIGNAL" so the UI and digest can
+    treat those rows as radar blips rather than formal procurements.
     """
 
     external_id: str
@@ -37,6 +41,7 @@ class RawTender:
     cpv_codes: List[str] = field(default_factory=list)
     published_at: Optional[datetime] = None
     deadline: Optional[datetime] = None
+    category: str = "TENDER"
 
 
 class BaseAdapter(ABC):

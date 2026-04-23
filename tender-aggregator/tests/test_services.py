@@ -7,10 +7,11 @@ import pytest
 
 from app.adapters.base import RawTender
 from app.filters import FilterConfig
-from app.models import StatusChange, Tender, TenderStatus
+from app.models import StatusChange, Tender, TenderCategory, TenderStatus
 from app.services import (
     change_status,
     compute_content_hash,
+    fetch_new_since,
     persist_raw_tenders,
     update_notes,
 )
@@ -98,3 +99,46 @@ def test_update_notes(db_session, cfg):
     update_notes(db_session, tender.id, "moje notatki")
     db_session.refresh(tender)
     assert tender.notes == "moje notatki"
+
+
+def test_persist_preserves_category_early_signal(db_session, cfg):
+    raw = RawTender(
+        external_id="sig-1",
+        title="Reklama: nowa kampania w prasie",
+        description="zapowiedź",
+        organization="news",
+        url="https://example.com/1",
+        cpv_codes=[],
+        category="EARLY_SIGNAL",
+    )
+    _, new = persist_raw_tenders(db_session, "news_demo", [raw], cfg)
+    assert new == 1
+    t = db_session.query(Tender).one()
+    assert t.category == TenderCategory.EARLY_SIGNAL
+
+
+def test_fetch_new_since_respects_category(db_session, cfg):
+    t_raw = _raw("Reklama — przetarg", "t1")
+    s_raw = RawTender(
+        external_id="s1",
+        title="Reklama news",
+        description="",
+        url="https://x",
+        cpv_codes=[],
+        category="EARLY_SIGNAL",
+    )
+    persist_raw_tenders(db_session, "a", [t_raw], cfg)
+    persist_raw_tenders(db_session, "b", [s_raw], cfg)
+
+    from datetime import datetime, timedelta
+    since = datetime.utcnow() - timedelta(hours=1)
+
+    all_rows = fetch_new_since(db_session, since)
+    tenders_only = fetch_new_since(db_session, since, category=TenderCategory.TENDER)
+    signals_only = fetch_new_since(db_session, since, category=TenderCategory.EARLY_SIGNAL)
+
+    assert len(all_rows) == 2
+    assert len(tenders_only) == 1
+    assert len(signals_only) == 1
+    assert tenders_only[0].category == TenderCategory.TENDER
+    assert signals_only[0].category == TenderCategory.EARLY_SIGNAL

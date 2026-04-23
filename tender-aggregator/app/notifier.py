@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import Tender
+from app.models import Tender, TenderCategory
 from app.services import fetch_new_since
 
 
@@ -26,10 +26,16 @@ _env = Environment(
 )
 
 
-def render_digest_html(tenders: List[Tender], dashboard_base_url: str) -> str:
+def render_digest_html(
+    tenders: List[Tender],
+    dashboard_base_url: str,
+    *,
+    signals: Optional[List[Tender]] = None,
+) -> str:
     template = _env.get_template("email_digest.html")
     return template.render(
         tenders=tenders,
+        signals=signals or [],
         dashboard_base_url=dashboard_base_url.rstrip("/"),
         generated_at=datetime.now(),
     )
@@ -63,20 +69,28 @@ def send_email(*, subject: str, html: str, to_addr: Optional[str] = None) -> Non
 def send_daily_digest(session: Session, *, lookback_hours: int = 24) -> int:
     """Collect NEW tenders from the last N hours and mail them.
 
-    Returns the number of tenders included (0 means no mail sent unless
-    ``SEND_EMPTY_DIGEST`` is true).
+    Tenders and early-signal rows go into separate sections. The total
+    count of rows included is returned; 0 means no mail was sent unless
+    ``SEND_EMPTY_DIGEST`` is true.
     """
     since = datetime.utcnow() - timedelta(hours=lookback_hours)
-    tenders = fetch_new_since(session, since)
+    tenders = fetch_new_since(session, since, category=TenderCategory.TENDER)
+    signals: List[Tender] = []
+    if settings.digest_include_signals:
+        signals = fetch_new_since(session, since, category=TenderCategory.EARLY_SIGNAL)
 
     dashboard_url = f"http://{settings.dashboard_host}:{settings.dashboard_port}"
 
-    if not tenders and not settings.send_empty_digest:
-        logger.info("Digest: no new tenders since %s; not sending mail", since.isoformat())
+    total = len(tenders) + len(signals)
+    if total == 0 and not settings.send_empty_digest:
+        logger.info("Digest: no new rows since %s; not sending mail", since.isoformat())
         return 0
 
-    html = render_digest_html(tenders, dashboard_url)
+    html = render_digest_html(tenders, dashboard_url, signals=signals)
     today = datetime.now().strftime("%Y-%m-%d")
-    subject = f"[Tender Aggregator] Nowości {today}: {len(tenders)} ogłoszeń"
+    parts = [f"{len(tenders)} ogłoszeń"]
+    if signals:
+        parts.append(f"{len(signals)} sygnałów")
+    subject = f"[Tender Aggregator] Nowości {today}: {', '.join(parts)}"
     send_email(subject=subject, html=html)
-    return len(tenders)
+    return total

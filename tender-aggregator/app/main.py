@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.adapters.registry import ADAPTERS, get_adapter
 from app.config import configure_logging, settings
 from app.database import SessionLocal, get_session, init_db
-from app.models import ScrapeRun, Tender, TenderStatus
+from app.models import ScrapeRun, Tender, TenderCategory, TenderStatus
 from app.services import change_status, update_notes
 
 
@@ -42,8 +42,15 @@ STATUS_LABELS_PL = {
     TenderStatus.WON: "Wygrane",
 }
 
+CATEGORY_LABELS_PL = {
+    TenderCategory.TENDER: "Przetarg / zapytanie",
+    TenderCategory.EARLY_SIGNAL: "Sygnał rynkowy",
+}
+
 templates.env.globals["STATUS_LABELS_PL"] = STATUS_LABELS_PL
 templates.env.globals["STATUSES"] = list(TenderStatus)
+templates.env.globals["CATEGORY_LABELS_PL"] = CATEGORY_LABELS_PL
+templates.env.globals["TenderCategory"] = TenderCategory
 
 
 @app.on_event("startup")
@@ -55,20 +62,23 @@ def _on_startup() -> None:
 
 # ---- Dashboard ---------------------------------------------------------------
 
-@app.get("/", response_class=HTMLResponse)
-def dashboard(
+def _render_listing(
+    *,
     request: Request,
-    status: Optional[List[str]] = Query(default=None),
-    source: Optional[List[str]] = Query(default=None),
-    date_from: Optional[str] = Query(default=None),
-    date_to: Optional[str] = Query(default=None),
-    q: Optional[str] = Query(default=None),
-    page: int = Query(default=1, ge=1),
-    session: Session = Depends(get_session),
+    session: Session,
+    category: TenderCategory,
+    status: Optional[List[str]],
+    source: Optional[List[str]],
+    date_from: Optional[str],
+    date_to: Optional[str],
+    q: Optional[str],
+    page: int,
+    active_route: str,
 ) -> HTMLResponse:
+    """Shared rendering for the tender list and the signals list."""
     page_size = 50
 
-    filters = []
+    filters = [Tender.category == category]
     if status:
         try:
             enums = [TenderStatus(s) for s in status]
@@ -97,18 +107,14 @@ def dashboard(
         like = f"%{q}%"
         filters.append(or_(Tender.title.ilike(like), Tender.organization.ilike(like)))
 
-    where = and_(*filters) if filters else None
+    where = and_(*filters)
 
-    total_stmt = select(func.count(Tender.id))
-    if where is not None:
-        total_stmt = total_stmt.where(where)
-    total = session.execute(total_stmt).scalar_one()
+    total = session.execute(select(func.count(Tender.id)).where(where)).scalar_one()
 
-    list_stmt = select(Tender)
-    if where is not None:
-        list_stmt = list_stmt.where(where)
     list_stmt = (
-        list_stmt.order_by(Tender.scraped_at.desc())
+        select(Tender)
+        .where(where)
+        .order_by(Tender.scraped_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -116,7 +122,6 @@ def dashboard(
 
     source_ids = [a.source_id for a in ADAPTERS]
     total_pages = max(1, (total + page_size - 1) // page_size)
-
     soon_threshold = datetime.utcnow() + timedelta(days=7)
 
     return templates.TemplateResponse(
@@ -134,7 +139,59 @@ def dashboard(
             "date_to": date_to or "",
             "q": q or "",
             "soon_threshold": soon_threshold,
+            "category": category,
+            "active_route": active_route,
         },
+    )
+
+
+@app.get("/", response_class=HTMLResponse)
+def dashboard(
+    request: Request,
+    status: Optional[List[str]] = Query(default=None),
+    source: Optional[List[str]] = Query(default=None),
+    date_from: Optional[str] = Query(default=None),
+    date_to: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
+    return _render_listing(
+        request=request,
+        session=session,
+        category=TenderCategory.TENDER,
+        status=status,
+        source=source,
+        date_from=date_from,
+        date_to=date_to,
+        q=q,
+        page=page,
+        active_route="/",
+    )
+
+
+@app.get("/signals", response_class=HTMLResponse)
+def signals_dashboard(
+    request: Request,
+    status: Optional[List[str]] = Query(default=None),
+    source: Optional[List[str]] = Query(default=None),
+    date_from: Optional[str] = Query(default=None),
+    date_to: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
+    return _render_listing(
+        request=request,
+        session=session,
+        category=TenderCategory.EARLY_SIGNAL,
+        status=status,
+        source=source,
+        date_from=date_from,
+        date_to=date_to,
+        q=q,
+        page=page,
+        active_route="/signals",
     )
 
 
@@ -188,7 +245,7 @@ def quick_status(
     status: str = Form(...),
     session: Session = Depends(get_session),
 ) -> RedirectResponse:
-    """Inline list-view buttons that set status then return to dashboard."""
+    """Inline list-view buttons that set status then return to the listing."""
     try:
         target = TenderStatus(status)
     except ValueError:
@@ -196,7 +253,8 @@ def quick_status(
     tender = change_status(session, tender_id, target)
     if tender is None:
         raise HTTPException(status_code=404, detail="Tender not found")
-    return RedirectResponse(url="/", status_code=303)
+    back = "/signals" if tender.category == TenderCategory.EARLY_SIGNAL else "/"
+    return RedirectResponse(url=back, status_code=303)
 
 
 # ---- Sources / adapter health ------------------------------------------------

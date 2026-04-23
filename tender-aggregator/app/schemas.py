@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import TenderStatus
+from app.models import TenderCategory, TenderStatus
 
 
 class TenderOut(BaseModel):
@@ -25,6 +25,7 @@ class TenderOut(BaseModel):
     deadline: Optional[datetime]
     scraped_at: datetime
     status: TenderStatus
+    category: TenderCategory
     notes: Optional[str]
 
 

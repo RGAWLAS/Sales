@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     digest_hour: int = 8
     digest_minute: int = 30
     send_empty_digest: bool = False
+    digest_include_signals: bool = True
 
     dashboard_host: str = "127.0.0.1"
     dashboard_port: int = 8000

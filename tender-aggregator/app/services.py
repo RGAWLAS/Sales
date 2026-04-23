@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.adapters.base import RawTender
 from app.filters import FilterConfig, evaluate
-from app.models import ScrapeRun, StatusChange, Tender, TenderStatus
+from app.models import ScrapeRun, StatusChange, Tender, TenderCategory, TenderStatus
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +72,11 @@ def persist_raw_tenders(
                 existing.deadline = raw.deadline
             continue
 
+        try:
+            category = TenderCategory(raw.category)
+        except ValueError:
+            category = TenderCategory.TENDER
+
         tender = Tender(
             source=source_id,
             external_id=raw.external_id or "",
@@ -85,6 +90,7 @@ def persist_raw_tenders(
             deadline=raw.deadline,
             scraped_at=datetime.utcnow(),
             status=TenderStatus.NEW,
+            category=category,
             content_hash=h,
         )
         session.add(tender)
@@ -146,11 +152,18 @@ def record_scrape_run_end(
     session.commit()
 
 
-def fetch_new_since(session: Session, since: datetime) -> List[Tender]:
-    """Return NEW-status tenders scraped after ``since``, newest first."""
-    stmt = (
-        select(Tender)
-        .where(Tender.status == TenderStatus.NEW, Tender.scraped_at >= since)
-        .order_by(Tender.scraped_at.desc())
-    )
+def fetch_new_since(
+    session: Session,
+    since: datetime,
+    *,
+    category: Optional[TenderCategory] = None,
+) -> List[Tender]:
+    """Return NEW-status tenders scraped after ``since``, newest first.
+
+    If ``category`` is provided, results are restricted to that category.
+    """
+    conditions = [Tender.status == TenderStatus.NEW, Tender.scraped_at >= since]
+    if category is not None:
+        conditions.append(Tender.category == category)
+    stmt = select(Tender).where(*conditions).order_by(Tender.scraped_at.desc())
     return list(session.execute(stmt).scalars().all())
