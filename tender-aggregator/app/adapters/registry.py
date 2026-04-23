@@ -12,12 +12,18 @@ from __future__ import annotations
 from typing import Dict, List
 
 from app.adapters.base import BaseAdapter
-from app.adapters.ezamowienia import EzamowieniaAdapter
+from app.adapters.baza_konkurencyjnosci import BazaKonkurencyjnosciAdapter
 from app.adapters.eb2b import Eb2bAdapter
+from app.adapters.ezamowienia import EzamowieniaAdapter
+from app.adapters.platformazakupowa import PlatformaZakupowaAdapter
+from app.adapters.ted import TedAdapter
 
 
 ADAPTERS: List[BaseAdapter] = [
     EzamowieniaAdapter(),
+    TedAdapter(),
+    BazaKonkurencyjnosciAdapter(),
+    PlatformaZakupowaAdapter(),
     Eb2bAdapter(subdomain="nask", display_name="eB2B NASK"),
     Eb2bAdapter(subdomain="kowr", display_name="eB2B KOWR"),
 ]

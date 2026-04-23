@@ -183,6 +183,9 @@ tender-aggregator/
 │   │   ├── base.py        # BaseAdapter + RawTender
 │   │   ├── registry.py    # lista instancji adapterów
 │   │   ├── ezamowienia.py
+│   │   ├── ted.py
+│   │   ├── baza_konkurencyjnosci.py
+│   │   ├── platformazakupowa.py
 │   │   └── eb2b.py        # parametryzowany subdomeną
 │   ├── templates/
 │   └── static/
