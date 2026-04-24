@@ -1,0 +1,35 @@
+cpv_codes:
+  - "79340000"  # Usługi reklamowe i marketingowe
+  - "79341000"  # Usługi reklamowe
+  - "79341200"  # Usługi zarządzania reklamą
+  - "79341400"  # Kampanie reklamowe
+  - "79342000"  # Usługi marketingowe
+  - "79342200"  # Promocja
+  - "79416000"  # Public relations
+  - "79413000"  # Konsultacje marketingowe
+  - "72413000"  # Projektowanie stron www
+  - "79822500"  # Projekty graficzne
+  - "92111200"  # Produkcja filmów reklamowych
+
+keywords:
+  - "marketing"
+  - "reklama"
+  - "reklamow"
+  - "kampania"
+  - "zakup mediów"
+  - "planowanie mediów"
+  - "dom mediowy"
+  - "czas antenowy"
+  - "powierzchnia reklamowa"
+  - "public relations"
+  - "obsługa PR"
+  - "promocja"
+  - "strategia komunikacji"
+  - "kreacja"
+  - "social media"
+  - "digital marketing"
+  - "SEO"
+  - "SEM"
+  - "content marketing"
+
+exclude_keywords: []

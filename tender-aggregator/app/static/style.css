@@ -1,0 +1,8 @@
+/* Minor tweaks layered on top of Tailwind CDN. */
+html { -webkit-text-size-adjust: 100%; }
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+/* Slightly darker focus ring for inputs beyond Tailwind default. */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
